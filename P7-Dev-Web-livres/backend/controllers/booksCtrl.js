@@ -235,7 +235,7 @@ export const rateBook = async (req, res, next) => {
             return res.status(400).json({ error: 'Vous avez déjà noté ce livre' });
         }
 
-        // Ajouter la nouvelle note
+        // Ajouter la nouvelle note à la liste des notes
         book.ratings.push({
             userId: req.auth.userId,
             grade: req.body.rating

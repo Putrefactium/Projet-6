@@ -74,7 +74,7 @@ const bookSchema = new mongoose.Schema({
 });
 
 /**
- * Calcule la note moyenne d'un livre
+ * Calcule la note moyenne d'un livre en arrondissant à la décimale la plus proche
  * @method calculateAverageRating
  * @memberof BookSchema
  */
