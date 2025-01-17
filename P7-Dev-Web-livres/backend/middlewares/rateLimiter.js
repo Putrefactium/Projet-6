@@ -19,7 +19,7 @@ import rateLimit from 'express-rate-limit';
  */
 export const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Augmenté à 100 tentatives pour le développement
+    max: 100, // Augmenté à 100 tentatives pour le développement, passer à 5 en production
     message: {
         error: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.'
     },
