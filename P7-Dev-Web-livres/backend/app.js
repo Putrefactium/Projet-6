@@ -1,13 +1,20 @@
 /**
  * @fileoverview Configuration principale de l'application Express
  * @module app
- * @requires express
- * @requires mongoose
- * @requires path
- * @requires url
- * @requires dotenv
- * @requires routes/User
- * @requires routes/Books
+ * @requires express - Framework web pour Node.js
+ * @requires mongoose - ODM pour MongoDB
+ * @requires path - Module Node.js pour la gestion des chemins
+ * @requires url - Module Node.js pour la gestion des URLs
+ * @requires dotenv - Chargement des variables d'environnement
+ * @requires routes/User - Routes pour l'authentification
+ * @requires routes/Books - Routes pour la gestion des livres
+ * @requires middlewares/rateLimiter - Middleware de limitation de taux
+ * @description Configure le serveur Express avec:
+ * - Connexion MongoDB
+ * - Middleware de parsing JSON et formulaires
+ * - Gestion des CORS
+ * - Routes API pour l'authentification et les livres
+ * - Serveur de fichiers statiques pour les images
  */
 
 import express from 'express';
@@ -17,6 +24,7 @@ import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { loginLimiter } from './middlewares/rateLimiter.js';
 
 /**
  * Configuration des chemins pour ES modules
@@ -58,7 +66,7 @@ app.use((req, res, next) => {
 /**
  * Configuration des routes principales
  */
-app.use('/api/auth', userRoutes);
+app.use('/api/auth', loginLimiter, userRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/images', express.static(path.join(__dirname, 'images')));
 

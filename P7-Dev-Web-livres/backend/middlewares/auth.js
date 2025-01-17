@@ -14,11 +14,21 @@ dotenv.config();
  * @function
  * @param {Object} req - Requête Express
  * @param {Object} req.headers - En-têtes de la requête
- * @param {string} req.headers.authorization - Token d'authentification au format 'Bearer <token>'
+ * @param {string} req.headers.authorization - Token d'authentification au format 'Bearer <token>' où token est un JWT encodé en base64 contenant {userId: string}
  * @param {Object} res - Réponse Express
  * @param {Function} next - Fonction middleware suivante
  * @returns {void}
  * @throws {Error} Erreur si le token est invalide ou manquant
+ * @example
+ * Format valide du header Authorization
+ * Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ * @example
+ * Cas d'erreurs possibles:
+ * 1. Header Authorization manquant
+ * 2. Format du token invalide (pas de Bearer)
+ * 3. Token JWT malformé ou expiré
+ * 4. Signature du token invalide
+ * 5. Payload du token ne contient pas userId
  */
 export default (req, res, next) => {
     try {
