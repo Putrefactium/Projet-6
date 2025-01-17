@@ -30,7 +30,7 @@ const router = express.Router();
  * @param {Function} next - Fonction middleware suivante
  * @returns {Promise<void>} Retourne les 3 livres les mieux notés
  */
-router.get('/bestratings', auth, booksCtrl.getBestRatingsBook);
+router.get('/bestratings', booksCtrl.getBestRatingsBook);
 
 /**
  * Route GET pour récupérer tous les livres
