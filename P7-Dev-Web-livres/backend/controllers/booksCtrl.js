@@ -1,61 +1,158 @@
 /**
- * @fileoverview Contrôleur pour la gestion des livres
+ * @fileoverview Contrôleur pour la gestion des livres dans l'application
  * @module controllers/booksCtrl
+ * @requires ../models/book
  */
 
-export const getAllBooks = async (req, res) => {
+import Book from '../models/book.js';
+
+/**
+ * Crée un nouveau livre
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */
+export const createBook = async (req, res, next) => {
     try {
-        // Pour le moment, on renvoie un tableau vide
-        res.status(200).json([]);
+        const bookObject = req.file ? {
+            ...JSON.parse(req.body.book),
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    } : { ...req.body };
+
+    delete bookObject._id;
+    delete bookObject._userId;
+
+    const book = new Book({
+        ...bookObject,
+        userId: req.auth.userId
+    });
+
+    book.save()
+        .then(() => {
+            res.status(201).json({ message: 'Nouveau livre enregistré !' });
+        })
+        .catch(error => {
+            res.status(400).json({ error: error.message });
+        });
+    } catch (error) {
+        res.status(400).json({ error: 'Format de données invalide' });
+    }
+};
+
+/**
+ * Récupère un livre spécifique
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */
+export const getOneBook = async (req, res, next) => {
+    try {
+        Book.findOne({
+            _id: req.params.id
+        })
+        .then(book => res.status(200).json(book))
+        .catch(error => res.status(404).json({ error: error.message }));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-export const getOneBook = async (req, res) => {
+/**
+ * Récupère tous les livres
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */
+export const getAllBooks = async (req, res, next) => {
     try {
-        // Pour le moment, on renvoie un objet vide
-        res.status(200).json({});
+        Book.find()
+        .then(books => res.status(200).json(books))
+        .catch(error => res.status(400).json({ error: error.message }));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-export const createBook = async (req, res) => {
+/**
+ * Modifie un livre existant
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */
+export const modifyBook = async (req, res, next) => {
     try {
-        // Pour le moment, on simule la création
-        res.status(201).json({ message: "Livre créé !" });
+        const bookObject = req.file ? {
+            ...JSON.parse(req.body.book),
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        } : { ...req.body };
+
+        delete bookObject._userId;
+
+        Book.findOne({ _id: req.params.id })
+            .then((book) => {
+                if (book.userId != req.auth.userId) {
+                    res.status(401).json({ message: 'Not authorized' });
+                } else {
+                    Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+                        .then(() => res.status(200).json({ message: 'Livre modifié !' }))
+                        .catch(error => res.status(400).json({ error }));
+                }
+            })
+            .catch(error => res.status(400).json({ error }));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-export const modifyBook = async (req, res) => {
+/**
+ * Supprime un livre
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */
+export const deleteBook = async (req, res, next) => {
     try {
-        // Pour le moment, on simule la modification
-        res.status(200).json({ message: "Livre modifié !" });
+        Book.findOne({ _id: req.params.id })
+            .then((book) => {
+                if (book.userId != req.auth.userId) {
+                    res.status(401).json({ message: 'Not authorized' });
+                } else {
+                    Book.deleteOne({ _id: req.params.id })
+                        .then(() => res.status(200).json({ message: 'Livre supprimé !' }))
+                        .catch(error => res.status(400).json({ error }));
+                }
+            })
+            .catch(error => res.status(400).json({ error }));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-export const deleteBook = async (req, res) => {
+/**
+ * Récupère les 3 livres les mieux notés
+ * @async
+ * @param {Object} req - Requête Express
+ * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
+ */    
+export const getBestRatingsBook = async (req, res, next) => {
     try {
-        // Pour le moment, on simule la suppression
-        res.status(200).json({ message: "Livre supprimé !" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
-    
-export const getBestRatingsBook = async (req, res) => {
-    try {
-        // Pour le moment, on renvoie un tableau exemple
-        res.status(200).json([
-            { id: 1, title: "Livre 1", rating: 4.5 },
-            { id: 2, title: "Livre 2", rating: 4.8 }
-        ]);
+        Book.find()
+            .sort({ averageRating: -1 }) // Tri par note moyenne décroissante
+            .limit(3) // Limite à 3 livres
+            .then(books => res.status(200).json(books))
+            .catch(error => res.status(400).json({ error: error.message }));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -63,20 +160,45 @@ export const getBestRatingsBook = async (req, res) => {
 
 /**
  * Note un livre
- * @param {Object} req - Requête Express
+ * @async
+ * @param {Object} req - Requête Express contenant la note dans req.body.rating
  * @param {Object} res - Réponse Express
+ * @param {Function} next - Fonction suivante
+ * @returns {Promise<void>}
  */
-export const rateBook = async (req, res) => {
+export const rateBook = async (req, res, next) => {
     try {
-        // Pour le moment, on simule l'ajout d'une note
-        res.status(201).json({
-            message: "Note ajoutée !",
-            rating: {
-                bookId: req.params.id,
-                userId: req.auth.userId,
-                grade: req.body.rating
-            }
+        // Vérifier que la note est entre 0 et 5
+        if (req.body.rating < 0 || req.body.rating > 5) {
+            return res.status(400).json({ error: 'La note doit être comprise entre 0 et 5' });
+        }
+
+        // Récupérer le livre
+        const book = await Book.findById(req.params.id);
+        if (!book) {
+            return res.status(404).json({ error: 'Livre non trouvé' });
+        }
+
+        // Vérifier si l'utilisateur a déjà noté ce livre
+        const userRating = book.ratings.find(rating => rating.userId === req.auth.userId);
+        if (userRating) {
+            return res.status(400).json({ error: 'Vous avez déjà noté ce livre' });
+        }
+
+        // Ajouter la nouvelle note
+        book.ratings.push({
+            userId: req.auth.userId,
+            grade: req.body.rating
         });
+
+        // Recalculer la moyenne
+        book.calculateAverageRating();
+
+        // Sauvegarder les modifications
+        await book.save();
+
+        // Renvoyer le livre mis à jour
+        res.status(201).json(book);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
