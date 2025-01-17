@@ -4,8 +4,10 @@
  */
 
 import express from 'express';
-import * as booksCtrl from '../controllers/booksCtrl.js';
 import auth from '../middlewares/auth.js';
+import multer from '../middlewares/multer-config.js';
+import sharp from '../middlewares/sharp-config.js';
+import * as booksCtrl from '../controllers/booksCtrl.js';
 
 /**
  * Router Express pour les routes des livres
@@ -31,7 +33,7 @@ router.get('/bestratings', auth, booksCtrl.getBestRatingsBook);
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
  */
-router.get('/', auth, booksCtrl.getAllBooks);
+router.get('/', booksCtrl.getAllBooks);
 
 /**
  * Route GET pour récupérer un livre spécifique
@@ -41,7 +43,7 @@ router.get('/', auth, booksCtrl.getAllBooks);
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
  */
-router.get('/:id', auth, booksCtrl.getOneBook);
+router.get('/:id', booksCtrl.getOneBook);
 
 /**
  * Route POST pour créer un nouveau livre
@@ -51,7 +53,7 @@ router.get('/:id', auth, booksCtrl.getOneBook);
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
  */
-router.post('/', auth, booksCtrl.createBook);
+router.post('/', auth, multer, sharp, booksCtrl.createBook);
 
 /**
  * Route PUT pour modifier un livre existant
@@ -61,7 +63,7 @@ router.post('/', auth, booksCtrl.createBook);
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
  */
-router.put('/:id', auth, booksCtrl.modifyBook);
+router.put('/:id', auth, multer, sharp, booksCtrl.modifyBook);
 
 /**
  * Route DELETE pour supprimer un livre

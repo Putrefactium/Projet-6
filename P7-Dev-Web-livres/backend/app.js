@@ -2,8 +2,12 @@ import express from 'express';
 import userRoutes from './routes/User.js';
 import bookRoutes from './routes/Books.js';
 import mongoose from 'mongoose';
-// import path from 'path';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -27,5 +31,6 @@ app.use((req, res, next) => {
 
 app.use('/api/auth', userRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 export default app;

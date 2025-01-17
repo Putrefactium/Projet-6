@@ -26,7 +26,8 @@ export const createBook = async (req, res, next) => {
 
     const book = new Book({
         ...bookObject,
-        userId: req.auth.userId
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
 
     book.save()
@@ -94,21 +95,33 @@ export const modifyBook = async (req, res, next) => {
             imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
         } : { ...req.body };
 
-        delete bookObject._userId;
+        const existingBook = await Book.findOne({ _id: req.params.id });
+        
+        if (!existingBook) {
+            return res.status(404).json({ message: 'Livre non trouvé' });
+        }
 
-        Book.findOne({ _id: req.params.id })
-            .then((book) => {
-                if (book.userId != req.auth.userId) {
-                    res.status(401).json({ message: 'Not authorized' });
-                } else {
-                    Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
-                        .then(() => res.status(200).json({ message: 'Livre modifié !' }))
-                        .catch(error => res.status(400).json({ error }));
-                }
-            })
-            .catch(error => res.status(400).json({ error }));
+        if (existingBook.userId != req.auth.userId) {
+            return res.status(403).json({ message: 'Non autorisé' });
+        }
+
+        // Si une nouvelle image est uploadée, supprimer l'ancienne
+        if (req.file && existingBook.imageUrl) {
+            const oldFilename = existingBook.imageUrl.split('/images/')[1];
+            const oldFilePath = path.join(__dirname, '../images', oldFilename);
+            if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath);
+            }
+        }
+
+        await Book.updateOne(
+            { _id: req.params.id },
+            { ...bookObject, _id: req.params.id }
+        );
+
+        res.status(200).json({ message: 'Livre modifié !' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error });
     }
 };
 
