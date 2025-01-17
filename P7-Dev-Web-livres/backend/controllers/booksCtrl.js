@@ -1,18 +1,31 @@
 /**
- * @fileoverview Contrôleur pour la gestion des livres dans l'application
+ * @fileoverview Contrôleur pour la gestion des livres dans l'application. Gère la création, modification, suppression et notation des livres.
  * @module controllers/booksCtrl
  * @requires ../models/book
+ * @requires fs
+ * @requires path
+ * @requires url
  */
 
 import Book from '../models/book.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
- * Crée un nouveau livre
+ * Crée un nouveau livre dans la base de données
  * @async
- * @param {Object} req - Requête Express
+ * @param {Object} req - Requête Express contenant les données du livre et l'image
+ * @param {Object} req.body - Corps de la requête contenant les données du livre
+ * @param {Object} req.file - Fichier image uploadé
+ * @param {Object} req.auth - Informations d'authentification
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne un message de confirmation ou une erreur
+ * @throws {Error} Erreur si le format des données est invalide
  */
 export const createBook = async (req, res, next) => {
     try {
@@ -43,12 +56,15 @@ export const createBook = async (req, res, next) => {
 };
 
 /**
- * Récupère un livre spécifique
+ * Récupère les informations d'un livre spécifique
  * @async
  * @param {Object} req - Requête Express
+ * @param {Object} req.params - Paramètres de la requête
+ * @param {string} req.params.id - ID du livre à récupérer
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne les données du livre ou une erreur
+ * @throws {Error} Erreur si le livre n'est pas trouvé
  */
 export const getOneBook = async (req, res, next) => {
     try {
@@ -63,12 +79,13 @@ export const getOneBook = async (req, res, next) => {
 };
 
 /**
- * Récupère tous les livres
+ * Récupère la liste de tous les livres
  * @async
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne un tableau de tous les livres
+ * @throws {Error} Erreur lors de la récupération des livres
  */
 export const getAllBooks = async (req, res, next) => {
     try {
@@ -81,12 +98,18 @@ export const getAllBooks = async (req, res, next) => {
 };
 
 /**
- * Modifie un livre existant
+ * Modifie les informations d'un livre existant
  * @async
  * @param {Object} req - Requête Express
+ * @param {Object} req.body - Nouvelles données du livre
+ * @param {Object} req.file - Nouvelle image du livre (optionnel)
+ * @param {Object} req.auth - Informations d'authentification
+ * @param {Object} req.params - Paramètres de la requête
+ * @param {string} req.params.id - ID du livre à modifier
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne un message de confirmation ou une erreur
+ * @throws {Error} Erreur si la modification échoue
  */
 export const modifyBook = async (req, res, next) => {
     try {
@@ -108,9 +131,11 @@ export const modifyBook = async (req, res, next) => {
         // Si une nouvelle image est uploadée, supprimer l'ancienne
         if (req.file && existingBook.imageUrl) {
             const oldFilename = existingBook.imageUrl.split('/images/')[1];
-            const oldFilePath = path.join(__dirname, '../images', oldFilename);
-            if (fs.existsSync(oldFilePath)) {
-                fs.unlinkSync(oldFilePath);
+            if (oldFilename) {
+                const oldFilePath = path.join(__dirname, '../images', oldFilename);
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlinkSync(oldFilePath);
+                }
             }
         }
 
@@ -121,17 +146,22 @@ export const modifyBook = async (req, res, next) => {
 
         res.status(200).json({ message: 'Livre modifié !' });
     } catch (error) {
-        res.status(400).json({ error });
+        console.error('Erreur lors de la modification du livre:', error);
+        res.status(400).json({ error: error.message });
     }
 };
 
 /**
- * Supprime un livre
+ * Supprime un livre et son image associée
  * @async
  * @param {Object} req - Requête Express
+ * @param {Object} req.params - Paramètres de la requête
+ * @param {string} req.params.id - ID du livre à supprimer
+ * @param {Object} req.auth - Informations d'authentification
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne un message de confirmation ou une erreur
+ * @throws {Error} Erreur si la suppression échoue
  */
 export const deleteBook = async (req, res, next) => {
     try {
@@ -152,12 +182,13 @@ export const deleteBook = async (req, res, next) => {
 };
 
 /**
- * Récupère les 3 livres les mieux notés
+ * Récupère les 3 livres ayant les meilleures notes moyennes
  * @async
  * @param {Object} req - Requête Express
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne un tableau des 3 meilleurs livres
+ * @throws {Error} Erreur lors de la récupération des livres
  */    
 export const getBestRatingsBook = async (req, res, next) => {
     try {
@@ -172,12 +203,18 @@ export const getBestRatingsBook = async (req, res, next) => {
 };
 
 /**
- * Note un livre
+ * Ajoute ou met à jour la note d'un livre par un utilisateur
  * @async
- * @param {Object} req - Requête Express contenant la note dans req.body.rating
+ * @param {Object} req - Requête Express
+ * @param {Object} req.body - Corps de la requête
+ * @param {number} req.body.rating - Note attribuée au livre (entre 0 et 5)
+ * @param {Object} req.params - Paramètres de la requête
+ * @param {string} req.params.id - ID du livre à noter
+ * @param {Object} req.auth - Informations d'authentification
  * @param {Object} res - Réponse Express
- * @param {Function} next - Fonction suivante
- * @returns {Promise<void>}
+ * @param {Function} next - Fonction middleware suivante
+ * @returns {Promise<void>} Retourne le livre mis à jour avec la nouvelle note
+ * @throws {Error} Erreur si la notation échoue ou si les conditions ne sont pas respectées
  */
 export const rateBook = async (req, res, next) => {
     try {
