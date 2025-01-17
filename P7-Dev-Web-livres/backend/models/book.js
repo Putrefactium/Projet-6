@@ -1,6 +1,16 @@
+/**
+ * @fileoverview Modèle Mongoose pour les livres et les notations
+ * @module models/Book
+ */
+
 import mongoose from 'mongoose';
 
-// Schéma pour les notations
+/**
+ * Schéma Mongoose pour les notations de livres
+ * @typedef {Object} RatingSchema
+ * @property {string} userId - ID de l'utilisateur ayant noté
+ * @property {number} grade - Note donnée (entre 0 et 5)
+ */
 const ratingSchema = new mongoose.Schema({
   userId: { 
     type: String, 
@@ -14,7 +24,18 @@ const ratingSchema = new mongoose.Schema({
   }
 });
 
-// Schéma principal pour les livres
+/**
+ * Schéma Mongoose principal pour les livres
+ * @typedef {Object} BookSchema
+ * @property {string} userId - ID de l'utilisateur ayant créé le livre
+ * @property {string} title - Titre du livre
+ * @property {string} author - Auteur du livre
+ * @property {string} imageUrl - URL de l'image de couverture
+ * @property {number} year - Année de publication
+ * @property {string} genre - Genre du livre
+ * @property {RatingSchema[]} ratings - Tableau des notations
+ * @property {number} averageRating - Note moyenne (entre 0 et 5)
+ */
 const bookSchema = new mongoose.Schema({
   userId: { 
     type: String, 
@@ -52,7 +73,11 @@ const bookSchema = new mongoose.Schema({
   }
 });
 
-// Méthode pour calculer la moyenne des notes
+/**
+ * Calcule la note moyenne d'un livre
+ * @method calculateAverageRating
+ * @memberof BookSchema
+ */
 bookSchema.methods.calculateAverageRating = function() {
   if (this.ratings.length === 0) {
     this.averageRating = 0;
