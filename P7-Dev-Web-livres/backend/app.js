@@ -1,12 +1,15 @@
 import express from 'express';
 import userRoutes from './routes/User.js';
-import shelfRoutes from './routes/Books.js';
+import bookRoutes from './routes/Books.js';
 import mongoose from 'mongoose';
 // import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 
-mongoose.connect('mongodb+srv://jeremiemariepro:N3y4qqOpcKXs68mT@cluster0.gfesu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
@@ -14,7 +17,7 @@ mongoose.connect('mongodb+srv://jeremiemariepro:N3y4qqOpcKXs68mT@cluster0.gfesu.
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Middleware pour gérer les erreurs de cors et autoriser les requêtes entre le frontend et le backend
+// Middleware pour gérer les erreurs de CORS et autoriser les requêtes entre le frontend et le backend
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
@@ -23,6 +26,6 @@ app.use((req, res, next) => {
     });
 
 app.use('/api/auth', userRoutes);
-app.use('/api/books', shelfRoutes);
+app.use('/api/books', bookRoutes);
 
 export default app;

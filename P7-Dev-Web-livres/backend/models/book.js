@@ -40,7 +40,10 @@ const bookSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  ratings: [ratingSchema],
+  ratings: {
+    type: [ratingSchema],
+    required: true
+  },
   averageRating: { 
     type: Number, 
     default: 0,

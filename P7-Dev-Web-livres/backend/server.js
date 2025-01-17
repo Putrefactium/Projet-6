@@ -1,5 +1,9 @@
 import http from 'http';
 import app from './app.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 
 const normalizePort = val => {
   const port = parseInt(val, 10);
@@ -12,7 +16,7 @@ const normalizePort = val => {
   }
   return false;
 };
-const port = normalizePort(process.env.PORT || '4000');
+const port = normalizePort(process.env.PORT || process.env.PORT);
 app.set('port', port);
 
 const errorHandler = error => {
