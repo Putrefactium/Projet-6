@@ -45,7 +45,7 @@ export const createBook = async (req, res, next) => {
 
     book.save()
         .then(() => {
-            res.status(201).json({ message: 'Nouveau livre enregistré !' });
+            res.status(201).json({ message: 'Nouveau livre enregistré !', bookId: book._id });
         })
         .catch(error => {
             res.status(400).json({ error: error.message });
