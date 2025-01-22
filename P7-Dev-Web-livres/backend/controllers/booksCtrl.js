@@ -124,7 +124,7 @@ export const modifyBook = async (req, res, next) => {
             return res.status(404).json({ message: 'Livre non trouvé' });
         }
 
-        if (existingBook.userId != req.auth.userId) {
+        if (existingBook.userId !== req.auth.userId) {
             return res.status(403).json({ message: 'Non autorisé' });
         }
 
@@ -167,7 +167,7 @@ export const deleteBook = async (req, res, next) => {
     try {
         Book.findOne({ _id: req.params.id })
             .then((book) => {
-                if (book.userId != req.auth.userId) {
+                if (book.userId !== req.auth.userId) {
                     res.status(401).json({ message: 'Not authorized' });
                 } else {
                     Book.deleteOne({ _id: req.params.id })
