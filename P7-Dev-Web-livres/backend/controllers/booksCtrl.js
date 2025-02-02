@@ -170,6 +170,16 @@ export const deleteBook = async (req, res, next) => {
                 if (book.userId !== req.auth.userId) {
                     res.status(401).json({ message: 'Not authorized' });
                 } else {
+                    if (book.imageUrl) {
+                        const oldFilename = book.imageUrl.split('/images/')[1];
+                        if (oldFilename) {
+                            const oldFilePath = path.join(__dirname, '../images', oldFilename);
+                            if (fs.existsSync(oldFilePath)) {
+                                fs.unlinkSync(oldFilePath);
+                            }
+                        }
+                    }
+                    
                     Book.deleteOne({ _id: req.params.id })
                         .then(() => res.status(200).json({ message: 'Livre supprimé !' }))
                         .catch(error => res.status(400).json({ error }));
